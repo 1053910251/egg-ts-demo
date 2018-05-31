@@ -11,6 +11,10 @@ const plugin: EggPlugin = {
         enable: true,
         path: path.join(__dirname, '../app/lib/egg-typeorm'),
     },
+    requestMapping: {
+        enable: true,
+        path: path.join(__dirname, '../app/lib/egg-request-mapping'),
+    }
 };
 
 export default plugin;
