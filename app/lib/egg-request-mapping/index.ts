@@ -1,17 +1,19 @@
 import {RouteParamtypesEnum} from './enum/route-paramtypes.enum';
 
-export * from './decorator/http-request.decorator';
+export * from './decorator/http-method.decorator';
 export * from './decorator/router-params.decorator';
 
 import {Application, Context} from 'egg';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
-    CONTROLLER_METHOD_METADATA, HTTP_METHOD_METADATA, HTTP_PATH_METADATA, HTTP_ROOT_PATH_METADATA, ROUTE_ARGS_METADATA,
+    ROUTE_ARGS_METADATA, ROUTE_HANDLE_METADATA, ROUTE_METHOD_METADATA, ROUTE_PREFIX_METADATA, ROUTE_URL_METADATA,
 } from './constant';
 
 class ResquestMapping {
     _prefix: string = '';
+
+    _routes: Map<string, string> = new Map();
 
     setPrefix = (prefix: string) => {
         this._prefix = prefix;
@@ -55,12 +57,21 @@ class ResquestMapping {
         files.map((file) => {
             const controller = require(file).default;
             const prototype = controller.prototype;
-            const rootPath = Reflect.getMetadata(HTTP_ROOT_PATH_METADATA, prototype) || '';
-            const methods = Reflect.getMetadata(CONTROLLER_METHOD_METADATA, prototype) || [];
-            methods.forEach((methodName) => {
-                const httpMethod = Reflect.getMetadata(HTTP_METHOD_METADATA, prototype, methodName);
-                const path = Reflect.getMetadata(HTTP_PATH_METADATA, prototype, methodName) || '';
-                app.router[httpMethod](`${this._prefix}${rootPath}${path}`, async (ctx: Context) => {
+            const handlers = Reflect.getMetadata(ROUTE_HANDLE_METADATA, prototype) || [];
+            // 类装饰器，传入的是类的构造函数
+            const urlPrefix = Reflect.getMetadata(ROUTE_PREFIX_METADATA, prototype.constructor) || '';
+            handlers.forEach((methodName) => {
+                // 方法装饰器，传入的是类的原型对象
+                const httpMethod = Reflect.getMetadata(ROUTE_METHOD_METADATA, prototype, methodName);
+                const urlPath = Reflect.getMetadata(ROUTE_URL_METADATA, prototype, methodName) || '';
+                const urls = [this._prefix || '', urlPrefix, urlPath];
+                const url = urls.filter((item) => item).join('/');
+                if (this._routes.has(url)) {
+                    app.emit('error', `[route]: ${url} already exists.`);
+                }
+                this._routes.set(url, `${file}#${methodName}`);
+                app.getLogger('routeLogger').info(`[route]: ${url} >>> ${file}#${methodName}`);
+                app.router[httpMethod](url, async (ctx: Context) => {
                     const instance = new controller(ctx);
                     const args = Reflect.getMetadata(ROUTE_ARGS_METADATA, prototype, methodName) || {};
                     const params: any[] = [];

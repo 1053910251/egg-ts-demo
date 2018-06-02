@@ -14,7 +14,11 @@ const plugin: EggPlugin = {
     requestMapping: {
         enable: true,
         path: path.join(__dirname, '../app/lib/egg-request-mapping'),
-    }
+    },
+    logrotator: {
+        enable: true,
+        package: 'egg-logrotator',
+    },
 };
 
 export default plugin;
