@@ -24,7 +24,7 @@ export default (appInfo: EggAppConfig) => {
 
     config.typeorm = {
         type: 'mysql',
-        host: '192.168.0.243',
+        host: '192.168.0.90',
         port: 3306,
         database: 'yibot_web',
         username: 'zhuiyi',

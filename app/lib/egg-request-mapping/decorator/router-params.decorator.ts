@@ -13,7 +13,7 @@ const assignMetadata = (args, paramtype, index, data) => {
 };
 
 const createRouteParamDecorator = (paramtype) => {
-    return (data) => (target, key, index) => {
+    return (data?: any) => (target, key, index) => {
         const args = Reflect.getMetadata(ROUTE_ARGS_METADATA, target, key) || {};
         Reflect.defineMetadata(
             ROUTE_ARGS_METADATA,
@@ -37,7 +37,7 @@ export const Body = (property?: string) => {
     return createRouteParamDecorator(RouteParamtypesEnum.BODY)(property);
 };
 
-export const param = (property?: string) => {
+export const Param = (property?: string) => {
     return createRouteParamDecorator(RouteParamtypesEnum.PARAM)(property);
 };
 

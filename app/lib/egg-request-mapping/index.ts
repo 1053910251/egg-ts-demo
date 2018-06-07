@@ -2,13 +2,17 @@ import {RouteParamtypesEnum} from './enum/route-paramtypes.enum';
 
 export * from './decorator/http-method.decorator';
 export * from './decorator/router-params.decorator';
+export * from './decorator/validate-params.decorator';
 
 import {Application, Context} from 'egg';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
-    ROUTE_ARGS_METADATA, ROUTE_HANDLE_METADATA, ROUTE_METHOD_METADATA, ROUTE_PREFIX_METADATA, ROUTE_URL_METADATA,
+    ROUTE_ARGS_METADATA, ROUTE_HANDLE_METADATA, ROUTE_METHOD_METADATA, ROUTE_PARAM_VALIDATE_METADATA,
+    ROUTE_PREFIX_METADATA, ROUTE_URL_METADATA,
+    ROUTE_VALIDATE_METADATA,
 } from './constant';
+import {ValidateParamtypesEnum} from './enum/validate-paramtypes.enum';
 
 class ResquestMapping {
     _prefix: string = '';
@@ -108,6 +112,22 @@ class ResquestMapping {
                         params[paramIndex] = param;
                     }
                     console.log(params);
+                    const validate = Reflect.getMetadata(ROUTE_VALIDATE_METADATA, prototype, methodName);
+                    console.log(validate);
+                    // 若果需要校验
+                    if (validate) {
+                        // 校验类型
+                        const validateArgs = Reflect.getMetadata(ROUTE_PARAM_VALIDATE_METADATA, prototype, methodName);
+                        console.log(validateArgs);
+                        for (const key of Object.keys(validateArgs)) {
+                            const validateType = +key.split(':')[0];
+                            // const validateIndex = validateArgs[key].index;
+                            switch (validateType) {
+                                case ValidateParamtypesEnum.REQUIRED: break;
+                                default: break;
+                            }
+                        }
+                    }
                     await instance[methodName](...params);
                 });
             });

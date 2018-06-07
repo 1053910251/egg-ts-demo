@@ -1,11 +1,12 @@
 import { Controller } from 'egg';
 import {CategoryEntity} from '../../database/business/entity/category.entity';
-import {GET, PREFIX, Query} from '../../lib/egg-request-mapping';
+import {GET, PREFIX, Query, Required, Validate} from '../../lib/egg-request-mapping';
 
 @PREFIX('faq')
 export default class FaqController extends Controller {
     @GET('list')
-    async list(@Query() query: object) {
+    @Validate()
+    async list(@Required('query') @Query() query: object) {
         console.log(query);
         const { ctx } = this;
         const result = await ctx.service.faq.list();

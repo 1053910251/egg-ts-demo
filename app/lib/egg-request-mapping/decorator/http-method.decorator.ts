@@ -22,11 +22,9 @@ export const POST = createHttpMethodDecorator(HttpMethodEnum.POST);
 export const PUT = createHttpMethodDecorator(HttpMethodEnum.PUT);
 export const DELETE = createHttpMethodDecorator(HttpMethodEnum.DELETE);
 
-const prefixDecorator = (prefix: string = '') => {
+// 设置路由前缀
+export const PREFIX = (prefix: string = '') => {
     return (target: any) => {
         Reflect.defineMetadata(ROUTE_PREFIX_METADATA, prefix, target);
     };
 };
-
-// 设置路由前缀
-export const PREFIX = prefixDecorator;
