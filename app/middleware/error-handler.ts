@@ -6,7 +6,7 @@ export default function errorHandlerMiddleware() {
             await next();
         } catch (e) {
             ctx.app.emit('error', e);
-            ctx.body = e.message;
+            ctx.body = e.getMessage();
         }
     };
 };

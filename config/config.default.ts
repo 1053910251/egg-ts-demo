@@ -42,17 +42,5 @@ export default (appInfo: EggAppConfig) => {
     config.logger = {
         dir: path.resolve(__dirname, `../logs/${appInfo.name}`),
     };
-
-    // 日志定时删除
-    exports.logrotator = {
-        filesRotateByHour: [],           // list of files that will be rotated by hour
-        hourDelimiter: '-',              // rotate the file by hour use specified delimiter
-        filesRotateBySize: [],           // list of files that will be rotated by size
-        maxFileSize: 1024,   // Max file size to judge if any file need rotate
-        maxFiles: 1,                    // pieces rotate by size
-        rotateDuration: 1,           // time interval to judge if any file need rotate
-        maxDays: 31,                     // keep max days log files, default is `31`. Set `0` to keep all logs
-    };
-
     return config;
 };

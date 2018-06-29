@@ -8,13 +8,16 @@ import {Application, Context} from 'egg';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
-    ROUTE_ARGS_METADATA, ROUTE_HANDLE_METADATA, ROUTE_METHOD_METADATA, ROUTE_PARAM_VALIDATE_METADATA,
+    ROUTE_ARGS_METADATA, ROUTE_HANDLE_METADATA, ROUTE_METHOD_METADATA,
     ROUTE_PREFIX_METADATA, ROUTE_URL_METADATA,
     ROUTE_VALIDATE_METADATA,
 } from './constant';
-import {ValidateParamtypesEnum} from './enum/validate-paramtypes.enum';
+import {ReflectDefaultMetadata} from './enum/reflect-default-metadata.enum';
+import {plainToClass} from 'class-transformer';
+import {validate} from 'class-validator';
+import {HttpException} from '../../exception';
 
-class ResquestMapping {
+class RequestMapping {
     _prefix: string = '';
 
     _routes: Map<string, string> = new Map();
@@ -67,22 +70,40 @@ class ResquestMapping {
             handlers.forEach((methodName) => {
                 // 方法装饰器，传入的是类的原型对象
                 const httpMethod = Reflect.getMetadata(ROUTE_METHOD_METADATA, prototype, methodName);
+                // 方法装饰器声明的路由
                 const urlPath = Reflect.getMetadata(ROUTE_URL_METADATA, prototype, methodName) || '';
                 const urls = [this._prefix || '', urlPrefix, urlPath];
-                const url = urls.filter((item) => item).join('/');
-                if (this._routes.has(url)) {
-                    app.emit('error', `[route]: ${url} already exists.`);
+                const url = urls.filter((item, index) => item || index === 0).join('/');
+                const routeKey = `[${httpMethod}]:${url}`;
+                if (this._routes.has(routeKey)) {
+                    // 路由重复
+                    app.emit('error', `[route]${routeKey} already exists.`);
                 }
-                this._routes.set(url, `${file}#${methodName}`);
-                app.getLogger('routeLogger').info(`[route]: ${url} >>> ${file}#${methodName}`);
+                this._routes.set(routeKey, `${file}#${methodName}`);
+                // 打印路由日志
+                app.getLogger('routeLogger').info(`[route]${routeKey} >>> ${file}#${methodName}`);
                 app.router[httpMethod](url, async (ctx: Context) => {
                     const instance = new controller(ctx);
+                    // 路由 handler 通过装饰器声明的参数
                     const args = Reflect.getMetadata(ROUTE_ARGS_METADATA, prototype, methodName) || {};
+                    // 获取方法的参数列表的类型
+                    const argstypes = Reflect.getMetadata(
+                        ReflectDefaultMetadata.DESGIN_PARAMTYPES,
+                        prototype,
+                        methodName,
+                    );
                     const params: any[] = [];
+                    // 是否需要校验
+                    const isNeedValidate = Reflect.getMetadata(ROUTE_VALIDATE_METADATA, prototype, methodName);
                     for (const key of Object.keys(args)) {
+                        // 参数的类型
                         const paramtype = +key.split(':')[0];
+                        // 参数的名称
                         const paramName = args[key].data;
+                        // 参数在arguments中的索引位置
                         const paramIndex = args[key].index;
+                        // 相应索引位置的参数类型
+                        const argstype = argstypes[paramIndex];
                         let param: any;
                         switch (paramtype) {
                             case RouteParamtypesEnum.REQUEST:
@@ -109,24 +130,15 @@ class ResquestMapping {
                                 break;
                             default: break;
                         }
-                        params[paramIndex] = param;
-                    }
-                    console.log(params);
-                    const validate = Reflect.getMetadata(ROUTE_VALIDATE_METADATA, prototype, methodName);
-                    console.log(validate);
-                    // 若果需要校验
-                    if (validate) {
-                        // 校验类型
-                        const validateArgs = Reflect.getMetadata(ROUTE_PARAM_VALIDATE_METADATA, prototype, methodName);
-                        console.log(validateArgs);
-                        for (const key of Object.keys(validateArgs)) {
-                            const validateType = +key.split(':')[0];
-                            // const validateIndex = validateArgs[key].index;
-                            switch (validateType) {
-                                case ValidateParamtypesEnum.REQUIRED: break;
-                                default: break;
+                        const clsObj = plainToClass(argstype, param);
+                        // 校验
+                        if (isNeedValidate) {
+                            const errors = await validate(clsObj);
+                            if (errors && errors.length) {
+                                throw new HttpException('Validate Failed', 400, errors);
                             }
                         }
+                        params[paramIndex] = clsObj;
                     }
                     await instance[methodName](...params);
                 });
@@ -135,8 +147,4 @@ class ResquestMapping {
     }
 }
 
-const rm = new ResquestMapping();
-
-rm.setPrefix('/api');
-
-export default rm;
+export default RequestMapping;

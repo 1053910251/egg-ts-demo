@@ -6,10 +6,14 @@ export class CategoryEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({
+        comment: '分类名称',
+    })
     name: string;
 
-    @Column('int')
+    @Column('int', {
+        comment: '父节点ID',
+    })
     parent: number;
 
     @Column('datetime')

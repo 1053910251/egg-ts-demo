@@ -1,7 +1,6 @@
-import {ROUTE_PARAM_VALIDATE_METADATA, ROUTE_VALIDATE_METADATA} from '../constant';
-import {ValidateParamtypesEnum} from '../enum/validate-paramtypes.enum';
+import {ROUTE_VALIDATE_METADATA} from '../constant';
 
-const assignMetadata = (args, paramtype, index, data) => {
+/*const assignMetadata = (args, paramtype, index, data) => {
     return Object.assign({}, args, {
         [`${paramtype}:${index}`]: {
             index,
@@ -12,7 +11,6 @@ const assignMetadata = (args, paramtype, index, data) => {
 
 const createValidateParamDecorator = (paramtypes) => {
     return (data?: any) => (target, key, index) => {
-        console.log(arguments);
         const args = Reflect.getMetadata(ROUTE_PARAM_VALIDATE_METADATA, target, key);
         Reflect.defineMetadata(
             ROUTE_PARAM_VALIDATE_METADATA,
@@ -21,9 +19,7 @@ const createValidateParamDecorator = (paramtypes) => {
             key,
         );
     };
-};
-
-export const Required = createValidateParamDecorator(ValidateParamtypesEnum.REQUIRED);
+};*/
 
 export const Validate = () => {
     return (target, key) => {
