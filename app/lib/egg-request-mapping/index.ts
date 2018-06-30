@@ -52,7 +52,7 @@ class RequestMapping {
             const stat = fs.statSync(filePath);
             if (stat.isDirectory()) {
                 result = [...result, ...this.scanDir(filePath)];
-            } else if (stat.isFile()) {
+            } else if (stat.isFile() && /.js/.test(filePath)) { // 是文件，并且以js结尾，过滤ts文件
                 result.push(filePath);
             }
         });
