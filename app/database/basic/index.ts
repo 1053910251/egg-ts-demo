@@ -1,8 +1,10 @@
 import { Application } from 'egg';
 import {Connection, getConnectionManager} from 'typeorm';
+import * as path from 'path';
 
 export function createConn(app: Application) {
     const { config } = app;
+    const entityAlias = path.resolve(__dirname, `entity/*.${app.config.env === 'local' ? 'ts' : 'js'}`);
     const options = {
         name: config.typeorm.database,
         type: config.typeorm.type,
@@ -13,7 +15,7 @@ export function createConn(app: Application) {
         database: config.typeorm.database,
         logging: true,
         entities: [
-            __dirname + '/entity/*.ts',
+            entityAlias,
         ],
         synchronize: false,
     };

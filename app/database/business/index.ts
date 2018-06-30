@@ -1,5 +1,6 @@
 import { Application } from 'egg';
 import {Connection, getConnectionManager} from 'typeorm';
+import * as path from 'path';
 
 /**
  * 数据库连接信息
@@ -20,6 +21,7 @@ export interface DbOption {
  */
 export async function createConn(app: Application, dbOption: DbOption) {
     const { config } = app;
+    const entityAlias = path.resolve(__dirname, `entity/*.${app.config.env === 'local' ? 'ts' : 'js'}`);
     const db = {
         type: config.typeorm.type,
         host: config.typeorm.host,
@@ -29,7 +31,7 @@ export async function createConn(app: Application, dbOption: DbOption) {
         database: config.typeorm.database,
         logging: true,
         entities: [
-            __dirname + '/entity/*.ts',
+            entityAlias,
         ],
         synchronize: false,
     };

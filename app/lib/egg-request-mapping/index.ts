@@ -18,11 +18,14 @@ import {validate} from 'class-validator';
 import {HttpException} from '../../exception';
 
 class RequestMapping {
+    app: Application;
+    // 全局路由前缀
     _prefix: string = '';
 
+    // 路由Map
     _routes: Map<string, string> = new Map();
 
-    setPrefix = (prefix: string) => {
+    setPrefix(prefix: string) {
         this._prefix = prefix;
     }
 
@@ -47,19 +50,24 @@ class RequestMapping {
 
         const files = fs.readdirSync(dir);
         let result = new Array<string>();
-        files.map((file) => {
+        files.forEach((file) => {
             const filePath = path.join(dir, file);
             const stat = fs.statSync(filePath);
             if (stat.isDirectory()) {
                 result = [...result, ...this.scanDir(filePath)];
-            } else if (stat.isFile() && /.js/.test(filePath)) { // 是文件，并且以js结尾，过滤ts文件
-                result.push(filePath);
+            } else if (stat.isFile()) { // 是文件
+                if (this.app.config.env !== 'local' && /.js/.test(filePath)) {
+                    result.push(filePath);
+                } else if (this.app.config.env === 'local') {
+                    result.push(filePath);
+                }
             }
         });
         return result;
     }
 
     scanController(app: Application) {
+        this.app = app;
         const files = this.scanDir();
         files.map((file) => {
             const controller = require(file).default;
