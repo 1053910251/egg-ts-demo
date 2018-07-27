@@ -37,7 +37,11 @@
       true,
       "allow-leading-underscore"
     ],
-    "align": [true, "statements"]
+    "align": [true, "statements"],
+    "ordered-imports": [true, {
+      "import-sources-order": "any",
+      "named-imports-order": "case-insensitive"
+    }]
   }
 }
 
